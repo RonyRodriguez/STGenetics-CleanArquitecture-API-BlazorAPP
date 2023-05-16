@@ -1,0 +1,233 @@
+﻿@page "/animalpage"
+@using STG.BlazorApp.Managers;
+@using STG.Domain.Domain;
+@using Microsoft.JSInterop
+
+@using Blazorise.Bootstrap5
+
+@inject AnimalManager Manager
+
+<PageTitle>Animal Page</PageTitle>
+
+<NavMenu />
+
+<h3>Animal Grip</h3>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="BirthDateFilter">Date:</label>
+            <input type="date" id="BirthDateFilter" class="form-control" @bind="Manager.BirthDateFilter" />
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="NameFilter">Name:</label>
+            <input type="text" id="NameFilter" class="form-control" @bind="Manager.NameFilter" />
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="BreedFilter">Breed:</label>
+            <input type="text" id="BreedFilter" class="form-control" @bind="Manager.BreedFilter" />
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="SexFilter">Sex:</label>
+            <input type="text" id="SexFilter" class="form-control" @bind="Manager.SexFilter" />
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="form-group">
+            <label for="PriceFilter">Price:</label>
+            <input type="number" id="PriceFilter" class="form-control" @bind="Manager.PriceFilter" />
+        </div>
+    </div>
+</div>
+
+<br />
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <button class="btn btn-primary mr-2" @onclick="ApplyFilters">Apply Filters</button>
+        <button class="btn btn-secondary" @onclick="ResetFilters">Reset Filters</button>
+    </div>
+</div>
+
+
+@if (Manager.Items == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th><button class="btn btn-link" @onclick='() => SortList("Quantity")'>Quantity</button></th>
+                <th><button class="btn btn-link" @onclick='() => SortList("Name")'>Name</button></th>
+                <th><button class="btn btn-link" @onclick='() => SortList("BirthDate")'>BirthDate</button></th>
+                <th><button class="btn btn-link" @onclick='() => SortList("Breed")'>Breed</button></th>
+                <th><button class="btn btn-link" @onclick='() => SortList("Sex")'>Sex</button></th>
+                <th><button class="btn btn-link" @onclick='() => SortList("Price")'>Price</button></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var animal in Manager.Items)
+            {
+                <tr>
+                    <td><input type="checkbox" @bind="animal.Selected" /></td>
+                    <td>
+                        <select class="form-control" @bind="animal.Quantity">
+                            @for (int i = 1; i <= 20; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control" @bind="animal.Name" /></td>
+                    <td><input type="date" class="form-control" @bind="animal.BirthDate" /></td>
+                    <td>
+                        <select class="form-control" @bind="animal.Breed">
+                            @foreach (var breed in Manager.ABreeds)
+                            {
+                                <option value="@breed">@breed</option>
+                            }
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control" @bind="animal.Sex">
+                            @foreach (var sex in Manager.ASexes)
+                            {
+                                <option value="@sex">@sex</option>
+                            }
+
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control" @bind="animal.Price" /></td>
+                    <td><button class="btn btn-danger" @onclick="() => DeleteItem(animal)">Delete</button></td>
+                    <td><button class="btn btn-primary" @onclick="() => UpdateItem(animal)">Update</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="pagination">
+    <button class="btn btn-primary" @onclick="GoToFirstPage">First</button>
+    <button class="btn btn-primary" @onclick="GoToPreviousPage">Previous</button>
+    <span>Page @Manager.CurrentPage of @Manager.TotalPages</span>
+    <button class="btn btn-primary" @onclick="GoToNextPage">Next</button>
+    <button class="btn btn-primary" @onclick="GoToLastPage">Last</button>
+</div>
+
+<button class="btn btn-primary mt-3" @onclick="UpdateAll">Update All</button>
+<button class="btn btn-success mt-3" @onclick="AddToCard">Add to Card</button>
+
+<br />
+<br />
+
+@if (Manager.ShowDialog)
+{
+    <Alert Color="Color.Danger" @bind-Visible="@visible">
+        <AlertDescription>
+            The selected animal is already in the list. Please remove the duplicate animal before proceeding.
+        </AlertDescription>
+        <AlertMessage>
+            Animal Duplicated
+        </AlertMessage>
+        <Blazorise.Bootstrap5.CloseButton />
+    </Alert>
+}
+
+<CardAnimals CardDomain = "@Manager.CardDomain"/>
+
+@code {
+
+    bool visible = true;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Manager.IsDataLoaded)
+        {
+            await Manager.GetAnimalsRemote();
+        }
+    }
+
+    void DeleteItem(AnimalDomain item)
+    {
+        Manager.DeleteItem(item);
+    }
+
+    async Task UpdateAll()
+    {
+        await Manager.UpdateAll();
+    }
+
+    void AddToCard()
+    {
+        Manager.AddToCard();
+    }
+
+    async Task UpdateItem(AnimalDomain item)
+    {
+        await Manager.UpdateItem(item);
+    }
+
+    void SortList(string column)
+    {
+        Manager.SortList(column);
+    }
+
+    void GoToFirstPage()
+    {
+        Manager.GoToFirstPage();
+    }
+
+    void GoToPreviousPage()
+    {
+        Manager.GoToPreviousPage();
+    }
+
+    void GoToNextPage()
+    {
+        Manager.GoToNextPage();
+    }
+
+    void GoToLastPage()
+    {
+        Manager.GoToLastPage();
+    }
+
+    void ApplyFilters()
+    {
+        Manager.ApplyFilters();
+    }
+
+    async Task ResetFilters()
+    {
+        Manager.ResetFilters();
+        await Manager.GetAnimalsRemote();
+    }
+
+    private void CloseDialog()
+    {
+        Manager.ShowDialog = false;
+    }
+
+}

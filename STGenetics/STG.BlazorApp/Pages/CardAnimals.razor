@@ -1,0 +1,48 @@
+﻿@page "/cardanimals"
+@using STG.BlazorApp.Managers;
+@using STG.Domain.Domain;
+@using Microsoft.AspNetCore.Components
+
+@using Blazorise.Bootstrap5
+@using Blazorise.Icons.FontAwesome
+
+<div class="container">
+    <h5>Invoice</h5>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Breed</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var breed in CardDomain.AnimalBreeds)
+            {
+                <tr>
+                    <td>@breed.Name</td>
+                    <td>@breed.Quantity</td>
+                    <td>@breed.TotalPrice.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h6>Total Amount: @CardDomain.TotalAmount.ToString("C")</h6>
+            <h6>Discount Percentage: @CardDomain.DiscountPercentage.ToString("0.##")%</h6>
+            <h6>Shipping Amount: @CardDomain.ShippingAmount.ToString("C")</h6>
+            <h6>Total Amount with Discount: @CardDomain.TotalAmountWithDiscount.ToString("C")</h6>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public CardDomain CardDomain { get; set; }
+
+}
